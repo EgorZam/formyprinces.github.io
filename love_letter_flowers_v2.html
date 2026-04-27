@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Nunito:wght@300;400;600&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    min-height:100vh;
+    background: linear-gradient(135deg,#fce4ec 0%,#f8bbd0 25%,#e1bee7 50%,#d1c4e9 75%,#bbdefb 100%);
+    font-family:'Nunito',sans-serif;
+    overflow-x:hidden;
+    position:relative;
+  }
+  .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+  .star { position:absolute; border-radius:50%; background:rgba(255,255,255,0.6); animation:twinkle var(--dur) ease-in-out infinite; }
+  @keyframes twinkle { 0%,100%{opacity:.2;transform:scale(1)} 50%{opacity:1;transform:scale(1.4)} }
+
+  .page { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; padding:40px 20px 80px; }
+
+  .title { font-family:'Playfair Display',serif; font-size:clamp(2rem,5vw,3.2rem); color:#ad1457; text-align:center; margin-bottom:6px; letter-spacing:1px; }
+  .subtitle { font-size:1rem; color:#c2185b; text-align:center; margin-bottom:52px; font-weight:300; font-style:italic; letter-spacing:2px; }
+
+  /* ── ENVELOPE SCENE ── */
+  .envelope-scene {
+    position:relative;
+    width:320px;
+    height:320px;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 70px;
+  }
+
+  .envelope-wrap {
+    position:relative; cursor:pointer; z-index:10;
+    transition:transform .3s ease;
+  }
+  .envelope-wrap:hover { transform:scale(1.05); }
+  .envelope-wrap.done { cursor:default; }
+
+  .hint { position:absolute; bottom:-32px; left:50%; transform:translateX(-50%); font-size:.78rem; color:#c2185b; white-space:nowrap; letter-spacing:1px; animation:pulse-hint 2s ease-in-out infinite; transition:opacity .3s; }
+  @keyframes pulse-hint { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+  .env-svg { display:block; filter:drop-shadow(0 8px 24px rgba(173,20,87,.2)); }
+
+  /* flowers burst — positioned ABOVE envelope center */
+  .flowers-container {
+    position:absolute;
+    /* move anchor up so flowers erupt above the envelope */
+    top:30%; left:50%;
+    width:0; height:0;
+    pointer-events:none;
+    z-index:20;
+  }
+
+  .flower {
+    position:absolute;
+    opacity:0;
+    transform:translate(-50%,-50%) scale(0) rotate(0deg);
+    font-size:2rem;
+  }
+  .flower.bloom {
+    animation:bloom-fly .9s cubic-bezier(.22,.61,.36,1) forwards;
+    animation-delay:var(--ad,0s);
+  }
+  @keyframes bloom-fly {
+    0%   { opacity:0; transform:translate(-50%,-50%) scale(0) rotate(0deg); }
+    35%  { opacity:1; transform:translate(calc(-50% + var(--tx)*.45), calc(-50% + var(--ty)*.45)) scale(1.4) rotate(calc(var(--rot)*.5)); }
+    65%  { opacity:1; transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.05) rotate(var(--rot)); }
+    80%  { opacity:1; transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty) + 5px)) scale(1) rotate(var(--rot)); }
+    100% { opacity:.9; transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1) rotate(var(--rot)); }
+  }
+
+  /* sparkle ring */
+  .sparkles-ring { position:absolute; top:30%; left:50%; transform:translate(-50%,-50%); width:200px; height:200px; pointer-events:none; opacity:0; z-index:15; }
+  .sparkles-ring.show { animation:ring-appear .5s ease-out .15s forwards; }
+  @keyframes ring-appear { 0%{opacity:0;transform:translate(-50%,-50%) scale(.4)} 60%{opacity:1;transform:translate(-50%,-50%) scale(1.1)} 100%{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+  .sparkle-dot { position:absolute; width:8px; height:8px; border-radius:50%; top:50%; left:50%; animation:sparkle-orbit 2.8s ease-in-out infinite; }
+  @keyframes sparkle-orbit { 0%,100%{opacity:1;transform:translate(-50%,-50%) rotate(var(--sa)) translateX(90px) scale(1)} 50%{opacity:.4;transform:translate(-50%,-50%) rotate(calc(var(--sa)+15deg)) translateX(96px) scale(.5)} }
+
+  /* ── FLOATING BUBBLES ── */
+  .bubbles-area {
+    position:relative;
+    width:100%;
+    max-width:800px;
+    margin-bottom:56px;
+    min-height:340px;
+  }
+
+  .bubble {
+    position:absolute;
+    background:rgba(255,255,255,0.55);
+    backdrop-filter:blur(10px);
+    border:1.5px solid rgba(255,255,255,.85);
+    border-radius:50px;
+    padding:16px 22px;
+    max-width:220px;
+    text-align:center;
+    animation:float-bubble var(--fdur,6s) ease-in-out infinite;
+    animation-delay:var(--fad,0s);
+    cursor:default;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .bubble::after {
+    content:'';
+    position:absolute;
+    bottom:-14px;
+    left:var(--tail,40px);
+    width:14px; height:14px;
+    background:rgba(255,255,255,.55);
+    border-right:1.5px solid rgba(255,255,255,.85);
+    border-bottom:1.5px solid rgba(255,255,255,.85);
+    border-radius:0 0 12px 0;
+    transform:rotate(20deg);
+  }
+  .bubble:hover { transform:translateY(-8px) scale(1.04); box-shadow:0 18px 40px rgba(173,20,87,.18); }
+
+  @keyframes float-bubble {
+    0%,100% { transform:translateY(0px) rotate(var(--tilt,0deg)); }
+    50%      { transform:translateY(var(--lift,-10px)) rotate(calc(var(--tilt,0deg) + 1.5deg)); }
+  }
+
+  .bubble-icon { font-size:1.6rem; margin-bottom:6px; }
+  .bubble-text { font-family:'Playfair Display',serif; font-style:italic; color:#880e4f; font-size:.95rem; line-height:1.5; }
+  .bubble-tag { margin-top:7px; font-size:.7rem; color:#c2185b; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; }
+
+  /* ── BOTTOM QUOTE ── */
+  .bottom-note { font-family:'Playfair Display',serif; font-style:italic; color:#ad1457; font-size:1.2rem; text-align:center; opacity:.9; padding:0 16px; max-width:500px; line-height:1.8; }
+
+  /* ── FLOATING PETALS ── */
+  .floating-petal { position:fixed; pointer-events:none; animation:fall-petal linear infinite; opacity:.6; z-index:0; }
+  @keyframes fall-petal { 0%{transform:translateY(-20px) rotate(0deg);opacity:0} 10%{opacity:.6} 90%{opacity:.4} 100%{transform:translateY(110vh) rotate(360deg);opacity:0} }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="page">
+  <h1 class="title">Для тебя, моя радость</h1>
+  <p class="subtitle">♡ &nbsp; каждый день я думаю о тебе &nbsp; ♡</p>
+
+  <div class="envelope-scene">
+    <div class="sparkles-ring" id="sparklesRing"></div>
+
+    <div class="envelope-wrap" id="envWrap" onclick="openEnvelope()">
+      <svg class="env-svg" width="220" height="170" viewBox="0 0 220 170" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="envGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f48fb1"/>
+            <stop offset="100%" stop-color="#ec407a"/>
+          </linearGradient>
+          <linearGradient id="flapGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f06292"/>
+            <stop offset="100%" stop-color="#e91e63"/>
+          </linearGradient>
+        </defs>
+        <rect x="4" y="50" width="212" height="116" rx="14" fill="url(#envGrad)"/>
+        <line x1="4" y1="50" x2="110" y2="110" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+        <line x1="216" y1="50" x2="110" y2="110" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+        <polygon points="4,166 110,110 216,166" fill="#e91e63" opacity=".5"/>
+        <text x="110" y="142" text-anchor="middle" font-size="20" fill="rgba(255,255,255,.9)">♡</text>
+        <g id="flapEl">
+          <polygon points="4,50 216,50 110,110" fill="url(#flapGrad)"/>
+          <polygon points="4,50 110,6 216,50" fill="#f48fb1"/>
+          <polygon points="4,50 110,6 216,50" fill="rgba(255,255,255,.15)"/>
+        </g>
+      </svg>
+      <div class="hint" id="hintEl">нажми на меня ✦</div>
+    </div>
+
+    <div class="flowers-container" id="flowersContainer"></div>
+  </div>
+
+  <!-- BUBBLES -->
+  <div class="bubbles-area" id="bubblesArea"></div>
+
+  <p class="bottom-note">«♡ Я тебя люблю ♡»</p>
+</div>
+
+<script>
+// ── STARS ──
+const starsEl = document.getElementById('stars');
+for(let i=0;i<60;i++){
+  const s=document.createElement('div'); s.className='star';
+  const sz=Math.random()*4+2;
+  s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*3}s;animation-delay:${Math.random()*3}s;`;
+  starsEl.appendChild(s);
+}
+
+// ── PETALS ──
+const petalEmojis=['🌸','🌺','🌷','🌼'];
+for(let i=0;i<14;i++){
+  const p=document.createElement('div'); p.className='floating-petal';
+  p.textContent=petalEmojis[Math.floor(Math.random()*petalEmojis.length)];
+  p.style.cssText=`left:${Math.random()*100}%;top:-30px;font-size:${.8+Math.random()*1.2}rem;animation-duration:${8+Math.random()*10}s;animation-delay:${Math.random()*10}s;`;
+  document.body.appendChild(p);
+}
+
+// ── SPARKLE RING ──
+const ring=document.getElementById('sparklesRing');
+const rColors=['#e91e63','#f48fb1','#9c27b0','#ff9800','#ffcdd2','#f06292'];
+for(let i=0;i<12;i++){
+  const d=document.createElement('div'); d.className='sparkle-dot';
+  d.style.cssText=`background:${rColors[i%rColors.length]};--sa:${i*30}deg;animation-delay:${i*.2}s;`;
+  ring.appendChild(d);
+}
+
+// ── FLOWERS (lots, burst upward) ──
+const flowerEmoji=['🌸','🌺','🌷','🌼','🌻','💐','🪷'];
+const flowers=[];
+// radial burst upward — angles from -160° to -20° (top hemisphere), plus a few sides
+const angles=[];
+for(let a=-165;a<=-15;a+=12) angles.push(a); // top arc, step 12° = ~13 flowers
+angles.push(-90,-75,-105,-60,-120,-45,-135); // extra density top-center
+const radii=[80,105,130,150,170,190,55,70,115,140,160];
+
+angles.forEach((angleDeg,i)=>{
+  const r=radii[i%radii.length];
+  const rad=angleDeg*Math.PI/180;
+  const tx=Math.round(Math.cos(rad)*r);
+  const ty=Math.round(Math.sin(rad)*r);
+  const rot=`${Math.round((Math.random()-0.5)*40)}deg`;
+  const emoji=flowerEmoji[i%flowerEmoji.length];
+  const ad=`${(i*0.045).toFixed(2)}s`;
+  flowers.push({emoji,tx,ty,rot,ad});
+});
+
+// add a second ring of smaller scattered ones
+for(let i=0;i<12;i++){
+  const angleDeg=-160+i*13+Math.random()*10;
+  const r=200+Math.random()*40;
+  const rad=angleDeg*Math.PI/180;
+  const tx=Math.round(Math.cos(rad)*r);
+  const ty=Math.round(Math.sin(rad)*r);
+  const rot=`${Math.round((Math.random()-0.5)*50)}deg`;
+  const emoji=flowerEmoji[Math.floor(Math.random()*flowerEmoji.length)];
+  const ad=`${(.5+i*.04).toFixed(2)}s`;
+  flowers.push({emoji,tx,ty,rot,ad,small:true});
+}
+
+const fc=document.getElementById('flowersContainer');
+flowers.forEach(f=>{
+  const el=document.createElement('div'); el.className='flower';
+  el.textContent=f.emoji;
+  el.style.cssText=`--tx:${f.tx}px;--ty:${f.ty}px;--rot:${f.rot};--ad:${f.ad};${f.small?'font-size:1.4rem':''}`;
+  fc.appendChild(el);
+});
+
+// ── BUBBLES ──
+const compliments=[
+  {icon:'🌸', text:'Ты самая красивая на свете девушка, о которой я могу мечать', tag:'красота'},
+  {icon:'✨', text:'Ты сияешь так, что ночь становится днем', tag:'сияние'},
+  {icon:'🌷', text:'Твоя нежность лечит мою душу', tag:'нежность'},
+  {icon:'💫', text:'Ты именно та, о ком я мечтал, даже не зная об этом', tag:'судьба'},
+  {icon:'🌹', text:'Твоя доброта — самая редкая и прекрасная магия', tag:'доброта'},
+  {icon:'🦋', text:'Ты делаешь мой день счастливее с каждым сообщением', tag:'счастье'},
+];
+
+// bubble positions — scattered naturally across the area
+const positions=[
+  {left:'2%',  top:'20px',  tail:'50px', tilt:'-2deg', lift:'-12px', fdur:'6.5s', fad:'0s'},
+  {left:'32%', top:'0px',   tail:'35px', tilt:'1.5deg',lift:'-9px',  fdur:'5.8s', fad:'.7s'},
+  {left:'63%', top:'15px',  tail:'45px', tilt:'-1deg', lift:'-14px', fdur:'7s',   fad:'1.4s'},
+  {left:'5%',  top:'170px', tail:'55px', tilt:'2deg',  lift:'-10px', fdur:'6s',   fad:'.3s'},
+  {left:'36%', top:'175px', tail:'30px', tilt:'-1.5deg',lift:'-11px',fdur:'6.8s', fad:'1s'},
+  {left:'66%', top:'165px', tail:'48px', tilt:'1deg',  lift:'-13px', fdur:'5.5s', fad:'1.7s'},
+];
+
+const area=document.getElementById('bubblesArea');
+compliments.forEach((c,i)=>{
+  const pos=positions[i];
+  const div=document.createElement('div');
+  div.className='bubble';
+  div.style.cssText=`left:${pos.left};top:${pos.top};--tail:${pos.tail};--tilt:${pos.tilt};--lift:${pos.lift};--fdur:${pos.fdur};--fad:${pos.fad};`;
+  div.innerHTML=`<div class="bubble-icon">${c.icon}</div><p class="bubble-text">${c.text}</p><p class="bubble-tag">✦ ${c.tag}</p>`;
+  area.appendChild(div);
+});
+
+// ── OPEN ENVELOPE ──
+let opened=false;
+function openEnvelope(){
+  if(opened) return; opened=true;
+  document.getElementById('hintEl').style.display='none';
+  document.getElementById('envWrap').classList.add('done');
+
+  const flap=document.getElementById('flapEl');
+  flap.style.transformOrigin='110px 6px';
+  flap.style.transition='transform .75s cubic-bezier(.4,0,.2,1)';
+  flap.style.transform='rotateX(180deg) scaleY(-1) translateY(-56px)';
+
+  setTimeout(()=>{ document.getElementById('sparklesRing').classList.add('show'); },180);
+  setTimeout(()=>{ document.querySelectorAll('.flower').forEach(f=>f.classList.add('bloom')); },320);
+}
+</script>
+</body>
+</html>
